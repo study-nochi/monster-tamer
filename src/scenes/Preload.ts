@@ -11,7 +11,7 @@ export class Preload extends Scene {
   constructor() {
     super({
       key: SCENE_KEY.PRELOAD_SCENE,
-      active: true
+      active: true,
     });
   }
 
@@ -58,6 +58,10 @@ export class Preload extends Scene {
 
   create() {
     this.textures.get(BATTLE_BACKGROUND_ASSET_KEYS.FOREST);
-    this.add.image(0,0, BATTLE_BACKGROUND_ASSET_KEYS.FOREST).setOrigin(0,0);
+    this.add.image(
+      this.scale.width / 2,
+      this.scale.height / 2,
+      BATTLE_BACKGROUND_ASSET_KEYS.FOREST
+    );
   }
 }
