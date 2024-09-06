@@ -1,5 +1,5 @@
 import { Scene } from "phaser";
-import { SCENE_KEY } from "../constants/sceen";
+import { SCENE_KEY } from "../constants/scene";
 import {
   BATTLE_ASSET_KEYS,
   BATTLE_BACKGROUND_ASSET_KEYS,
@@ -16,6 +16,8 @@ export class Preload extends Scene {
   }
 
   preload() {
+    console.log(`[${Preload.name}:preload] invoked`);
+
     const monsterTamerAssetPath = "assets/images/monster-tamer";
     const kenneysAssetPath = "assets/images/kenneys-assets";
 
@@ -57,11 +59,7 @@ export class Preload extends Scene {
   }
 
   create() {
-    this.textures.get(BATTLE_BACKGROUND_ASSET_KEYS.FOREST);
-    this.add.image(
-      this.scale.width / 2,
-      this.scale.height / 2,
-      BATTLE_BACKGROUND_ASSET_KEYS.FOREST
-    );
+    console.log(`[${Preload.name}:create] invoked`);
+    this.scene.start(SCENE_KEY.BATTLE_SCENE);
   }
 }
