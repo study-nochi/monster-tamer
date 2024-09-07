@@ -43,7 +43,7 @@ export class Battle extends Scene {
         .image(0, 0, BATTLE_ASSET_KEYS.HEALTH_BAR_BACKGROUND)
         .setOrigin(0),
       playerMonsterName,
-      this.#createHealth(34, 34),
+      this.#createHealthBar(34, 34),
       this.add.text(playerMonsterName.width + 35, 23, "L5", {
         color: "#ED474B",
         fontSize: "28px",
@@ -77,7 +77,7 @@ export class Battle extends Scene {
         .setOrigin(0)
         .setScale(1, 0.8),
       enemyMonsterName,
-      this.#createHealth(34, 34),
+      this.#createHealthBar(34, 34),
       this.add.text(enemyMonsterName.width + 35, 23, "L5", {
         color: "#ED474B",
         fontSize: "28px",
@@ -92,9 +92,12 @@ export class Battle extends Scene {
         fontSize: "16px",
       }),
     ]);
+
+    // render out the main and sub info panes
+    this.#createMainInfoPane();
   }
 
-  #createHealth(x: number, y: number) {
+  #createHealthBar(x: number, y: number) {
     const scaleY = 0.7;
     const leftCap = this.add
       .image(x, y, HEALTH_BAR_ASSET_KEYS.LEFT_CAP)
@@ -108,5 +111,38 @@ export class Battle extends Scene {
       .image(middle.x + middle.displayWidth, y, HEALTH_BAR_ASSET_KEYS.RIGHT_CAP)
       .setOrigin(0, 0.5);
     return this.add.container(x, y, [leftCap, middle, rightCap]);
+  }
+
+  #createMainInfoPane() {
+    const rectHeight = 124;
+    const padding = 4;
+
+    this.add
+      .rectangle(
+        0,
+        this.scale.height - rectHeight - padding,
+        this.scale.width - padding * 2,
+        rectHeight,
+        0xede4f3,
+        0.2
+      )
+      .setOrigin(0)
+      .setStrokeStyle(8, 0xe4434a, 1);
+  }
+  #createMainInfoSubPane() {
+    const rectWidth = 500;
+    const rectHeight = 124;
+
+    this.add
+      .rectangle(
+        0,
+        this.scale.height - rectHeight - padding,
+        this.scale.width - padding * 2,
+        rectHeight,
+        0xede4f3,
+        0.2
+      )
+      .setOrigin(0)
+      .setStrokeStyle(8, 0xe4434a, 1);
   }
 }
