@@ -1,13 +1,17 @@
 import { Scene } from "phaser";
-import { SCENE_KEY } from "../constants/scene";
 import {
   BATTLE_ASSET_KEYS,
   BATTLE_BACKGROUND_ASSET_KEYS,
   HEALTH_BAR_ASSET_KEYS,
   MONSTER_ASSET_KEYS,
 } from "../constants/asset";
+import { SCENE_KEY } from "../constants/scene";
+import { BattleMenu } from "../battle/ui/menu/battle-menu";
 
 export class Battle extends Scene {
+  #battleMenu: BattleMenu;
+  #cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
+
   constructor() {
     super({
       key: SCENE_KEY.BATTLE_SCENE,
@@ -94,7 +98,10 @@ export class Battle extends Scene {
     ]);
 
     // render out the main and sub info panes
-    this.#createMainInfoPane();
+    this.#battleMenu = new BattleMenu(this);
+    this.#battleMenu.showMainBattleMenu();
+
+    this.#cursorKeys = this.input.keyboard!.createCursorKeys();
   }
 
   #createHealthBar(x: number, y: number) {
@@ -111,38 +118,5 @@ export class Battle extends Scene {
       .image(middle.x + middle.displayWidth, y, HEALTH_BAR_ASSET_KEYS.RIGHT_CAP)
       .setOrigin(0, 0.5);
     return this.add.container(x, y, [leftCap, middle, rightCap]);
-  }
-
-  #createMainInfoPane() {
-    const rectHeight = 124;
-    const padding = 4;
-
-    this.add
-      .rectangle(
-        0,
-        this.scale.height - rectHeight - padding,
-        this.scale.width - padding * 2,
-        rectHeight,
-        0xede4f3,
-        0.2
-      )
-      .setOrigin(0)
-      .setStrokeStyle(8, 0xe4434a, 1);
-  }
-  #createMainInfoSubPane() {
-    const rectWidth = 500;
-    const rectHeight = 124;
-
-    this.add
-      .rectangle(
-        0,
-        this.scale.height - rectHeight - padding,
-        this.scale.width - padding * 2,
-        rectHeight,
-        0xede4f3,
-        0.2
-      )
-      .setOrigin(0)
-      .setStrokeStyle(8, 0xe4434a, 1);
   }
 }
