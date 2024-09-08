@@ -5,6 +5,7 @@ import {
   BATTLE_BACKGROUND_ASSET_KEYS,
   HEALTH_BAR_ASSET_KEYS,
   MONSTER_ASSET_KEYS,
+  UI_ASSET_KEYS,
 } from "../constants/asset";
 
 export class Preload extends Scene {
@@ -55,6 +56,12 @@ export class Preload extends Scene {
     this.load.image(
       MONSTER_ASSET_KEYS.CARNODUSK,
       `${monsterTamerAssetPath}/monsters/carnodusk.png`
+    );
+
+    // ui assets
+    this.load.image(
+      UI_ASSET_KEYS.CURSOR,
+      `${monsterTamerAssetPath}/ui/cursor.png`
     );
   }
 
