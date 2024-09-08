@@ -7,7 +7,7 @@ import {
 } from "../constants/asset";
 import { SCENE_KEY } from "../constants/scene";
 import { BattleMenu } from "../battle/ui/menu/battle-menu";
-import { BATTLE_PLAYER_INPUT } from "../battle/ui/menu/battle-menu.constants";
+import { BATTLE_PLAYER_INPUT } from "../battle/ui/menu/battle-menu-options";
 import { DIRECTION } from "../constants/direction";
 
 export class Battle extends Scene {
