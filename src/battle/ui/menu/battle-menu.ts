@@ -26,6 +26,7 @@ export class BattleMenu {
   #queuedInfoPanelMessages: string[];
   #queuedInfoPanelCallback: (() => void) | undefined;
   #waitingForInfoPanel: boolean;
+  #selectedAttckIndex?: number;
 
   constructor(scene: Phaser.Scene) {
     this.#scene = scene;
@@ -41,6 +42,13 @@ export class BattleMenu {
     this.#createMonsterAttackSubMenu();
   }
 
+  get selectedAttack() {
+    if (this.#activeBattleMenu === ACTIVE_BATTLE_MENU.BATTLE_MOVE_SELECT) {
+      return this.#selectedAttckIndex;
+    }
+    return undefined;
+  }
+
   showMainBattleMenu() {
     this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_MAIN;
     this.#battleTextGameObjectLine1.setText("what should");
@@ -53,6 +61,7 @@ export class BattleMenu {
       BATTLE_MENU_CURSOR_POSITIONS.x,
       BATTLE_MENU_CURSOR_POSITIONS.y
     );
+    this.#selectedAttckIndex = undefined;
   }
 
   hideMainBattleMenu() {
@@ -86,12 +95,13 @@ export class BattleMenu {
 
     if (input === BATTLE_PLAYER_INPUT.OK) {
       if (this.#activeBattleMenu === ACTIVE_BATTLE_MENU.BATTLE_MAIN) {
-        // TODO
+        this.#handlePlayerChooseMainBattleOption();
         return;
       }
 
       if (this.#activeBattleMenu === ACTIVE_BATTLE_MENU.BATTLE_MOVE_SELECT) {
         // TODO
+        this.#handlePlayerChooseAttack();
         return;
       }
       return;
@@ -477,25 +487,65 @@ export class BattleMenu {
   }
 
   #handlePlayerChooseMainBattleOption() {
+    this.hideMainBattleMenu();
+
     if (this.#selectedBattleMenuOption === BATTLE_MENU_OPTIONS.FIGHT) {
-      this.hideMainBattleMenu();
       this.showMonsterAttackSubMenu();
       return;
     }
 
     if (this.#selectedBattleMenuOption === BATTLE_MENU_OPTIONS.ITEM) {
       // TODO
+      this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_ITEM;
+      this.updateInfoPaneMessagesAndWaifForInput(["Your bag is empty..."], () =>
+        this.#switchToMainBattleMenu()
+      );
       return;
     }
 
     if (this.#selectedBattleMenuOption === BATTLE_MENU_OPTIONS.SWITCH) {
+      // TODO
+      this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_SWITCH;
+      this.updateInfoPaneMessagesAndWaifForInput(
+        ["You have no other monsters in your party..."],
+        () => this.#switchToMainBattleMenu()
+      );
+      return;
     }
 
     if (this.#selectedBattleMenuOption === BATTLE_MENU_OPTIONS.FLEE) {
       // TODO
+      this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_FLEE;
+      this.updateInfoPaneMessagesAndWaifForInput(
+        ["You fail to run away..."],
+        () => this.#switchToMainBattleMenu()
+      );
       return;
     }
 
     exhaustiveGuard(this.#selectedBattleMenuOption);
+  }
+
+  #handlePlayerChooseAttack() {
+    let selectedMoveIndex = 0;
+
+    switch (this.#selectedAttackMoveOption) {
+      case ATTACK_MOVE_OPTIONS.MOVE_1:
+        selectedMoveIndex = 0;
+        break;
+      case ATTACK_MOVE_OPTIONS.MOVE_2:
+        selectedMoveIndex = 1;
+        break;
+      case ATTACK_MOVE_OPTIONS.MOVE_3:
+        selectedMoveIndex = 2;
+        break;
+      case ATTACK_MOVE_OPTIONS.MOVE_4:
+        selectedMoveIndex = 3;
+        break;
+      default:
+        exhaustiveGuard(this.#selectedAttackMoveOption);
+    }
+
+    this.#selectedAttckIndex = selectedMoveIndex;
   }
 }

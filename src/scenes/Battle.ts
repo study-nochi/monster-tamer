@@ -114,6 +114,16 @@ export class Battle extends Scene {
 
     if (wasSpaceKeyPressed) {
       this.#battleMenu.handlePlayerInput(BATTLE_PLAYER_INPUT.OK);
+
+      // check if the player selected an attack, and update display text
+      if(this.#battleMenu.selectedAttack === undefined) {
+        return;
+      }
+      console.log(`Player selected the following move: ${this.#battleMenu.selectedAttack}`);
+      this.#battleMenu.hideMonsterAttackSubMenu();
+      this.#battleMenu.updateInfoPaneMessagesAndWaifForInput(['Your monster attacks the enemy!'],() => {
+        this.#battleMenu.showMonsterAttackSubMenu();
+      });
       return;
     }
 
