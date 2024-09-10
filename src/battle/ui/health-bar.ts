@@ -11,18 +11,55 @@ export class HealthBar {
   #middle: GameObjects.Image;
   #rightCap: GameObjects.Image;
 
+  #leftShadowCap: GameObjects.Image;
+  #middleShadowCap: GameObjects.Image;
+  #rightShadowCap: GameObjects.Image;
+
   constructor(scene: Scene, x: number, y: number) {
     this.#scene = scene;
     this.#fullWidth = 360;
     this.#scaleY = 0.7;
 
     this.#healBarContainer = this.#scene.add.container(x, y, []);
+    this.#createHealthBarShadowImages(x, y);
     this.#createHealthBarImages(x, y);
     this.#setMeterPercentage(1);
   }
 
   get container() {
     return this.#healBarContainer;
+  }
+
+  #createHealthBarShadowImages(x: number, y: number): void {
+    this.#leftShadowCap = this.#scene.add
+      .image(x, y, HEALTH_BAR_ASSET_KEYS.LEFT_CAP_SHADOW)
+      .setOrigin(0, 0.5)
+      .setScale(1, this.#scaleY);
+    this.#middleShadowCap = this.#scene.add
+      .image(
+        this.#leftShadowCap.x + this.#leftShadowCap.width,
+        y,
+        HEALTH_BAR_ASSET_KEYS.MIDDLE_SHADOW
+      )
+      .setOrigin(0, 0.5)
+      .setScale(1, this.#scaleY);
+
+    this.#middleShadowCap.displayWidth = this.#fullWidth;
+
+    this.#rightShadowCap = this.#scene.add
+      .image(
+        this.#middleShadowCap.x + this.#middleShadowCap.displayWidth,
+        y,
+        HEALTH_BAR_ASSET_KEYS.RIGHT_CAP_SHADOW
+      )
+      .setOrigin(0, 0.5)
+      .setScale(1, this.#scaleY);
+
+    this.#healBarContainer.add([
+      this.#leftShadowCap,
+      this.#middleShadowCap,
+      this.#rightShadowCap,
+    ]);
   }
 
   #createHealthBarImages(x: number, y: number): void {
