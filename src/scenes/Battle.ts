@@ -9,6 +9,8 @@ import { SCENE_KEY } from "../constants/scene";
 import { BattleMenu } from "../battle/ui/menu/battle-menu";
 import { BATTLE_PLAYER_INPUT } from "../battle/ui/menu/battle-menu-options";
 import { DIRECTION } from "../constants/direction";
+import { Background } from "../battle/background";
+import { HealthBar } from "../battle/ui/health-bar";
 
 export class Battle extends Scene {
   #battleMenu: BattleMenu;
@@ -28,7 +30,8 @@ export class Battle extends Scene {
   create() {
     console.log(`[${Battle.name}:create] invoked`);
     // created main background
-    this.add.image(0, 0, BATTLE_BACKGROUND_ASSET_KEYS.FOREST).setOrigin(0, 0);
+    const background = new Background(this);
+    background.showForest();
 
     // render out the player and enemy monsters
     this.add.image(768, 144, MONSTER_ASSET_KEYS.CARNODUSK, 0);
@@ -44,12 +47,13 @@ export class Battle extends Scene {
         fontSize: "32px",
       }
     );
+    const playerHealthBar = new HealthBar(this, 34, 34);
     this.add.container(556, 318, [
       this.add
         .image(0, 0, BATTLE_ASSET_KEYS.HEALTH_BAR_BACKGROUND)
         .setOrigin(0),
       playerMonsterName,
-      this.#createHealthBar(34, 34),
+      playerHealthBar.container,
       this.add.text(playerMonsterName.width + 35, 23, "L5", {
         color: "#ED474B",
         fontSize: "28px",
@@ -77,13 +81,14 @@ export class Battle extends Scene {
         fontSize: "32px",
       }
     );
+    const enemyHealthBar = new HealthBar(this, 34, 34);
     this.add.container(0, 0, [
       this.add
         .image(0, 0, BATTLE_ASSET_KEYS.HEALTH_BAR_BACKGROUND)
         .setOrigin(0)
         .setScale(1, 0.8),
       enemyMonsterName,
-      this.#createHealthBar(34, 34),
+      enemyHealthBar.container,
       this.add.text(enemyMonsterName.width + 35, 23, "L5", {
         color: "#ED474B",
         fontSize: "28px",
@@ -104,7 +109,13 @@ export class Battle extends Scene {
     this.#battleMenu.showMainBattleMenu();
 
     this.#cursorKeys = this.input.keyboard!.createCursorKeys();
-    this.#cursorKeys.down;
+    // this.#cursorKeys.down;
+    playerHealthBar.setMeterPercentageAnimated(0.5, {
+      duration: 1500,
+      callback: () => {
+        console.log("animation completed!")
+      }
+    })
   }
 
   update() {
@@ -116,14 +127,19 @@ export class Battle extends Scene {
       this.#battleMenu.handlePlayerInput(BATTLE_PLAYER_INPUT.OK);
 
       // check if the player selected an attack, and update display text
-      if(this.#battleMenu.selectedAttack === undefined) {
+      if (this.#battleMenu.selectedAttack === undefined) {
         return;
       }
-      console.log(`Player selected the following move: ${this.#battleMenu.selectedAttack}`);
+      console.log(
+        `Player selected the following move: ${this.#battleMenu.selectedAttack}`
+      );
       this.#battleMenu.hideMonsterAttackSubMenu();
-      this.#battleMenu.updateInfoPaneMessagesAndWaifForInput(['Your monster attacks the enemy!'],() => {
-        this.#battleMenu.showMonsterAttackSubMenu();
-      });
+      this.#battleMenu.updateInfoPaneMessagesAndWaifForInput(
+        ["Your monster attacks the enemy!"],
+        () => {
+          this.#battleMenu.showMonsterAttackSubMenu();
+        }
+      );
       return;
     }
 
@@ -146,21 +162,5 @@ export class Battle extends Scene {
     if (selectedDirection !== DIRECTION.NONE) {
       this.#battleMenu.handlePlayerInput(selectedDirection);
     }
-  }
-
-  #createHealthBar(x: number, y: number): Phaser.GameObjects.Container {
-    const scaleY = 0.7;
-    const leftCap = this.add
-      .image(x, y, HEALTH_BAR_ASSET_KEYS.LEFT_CAP)
-      .setOrigin(0, 0.5)
-      .setScale(1, scaleY);
-    const middle = this.add
-      .image(leftCap.x + leftCap.width, y, HEALTH_BAR_ASSET_KEYS.MIDDLE)
-      .setOrigin(0, 0.5);
-    middle.displayWidth = 360;
-    const rightCap = this.add
-      .image(middle.x + middle.displayWidth, y, HEALTH_BAR_ASSET_KEYS.RIGHT_CAP)
-      .setOrigin(0, 0.5);
-    return this.add.container(x, y, [leftCap, middle, rightCap]);
   }
 }
