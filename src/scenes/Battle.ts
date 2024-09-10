@@ -11,10 +11,12 @@ import { BATTLE_PLAYER_INPUT } from "../battle/ui/menu/battle-menu-options";
 import { DIRECTION } from "../constants/direction";
 import { Background } from "../battle/background";
 import { HealthBar } from "../battle/ui/health-bar";
+import { BattleMonster } from "../battle/monsters/battle-monster";
 
 export class Battle extends Scene {
   #battleMenu: BattleMenu;
   #cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
+  #activeEnemyMonster: BattleMonster;
 
   constructor() {
     super({
@@ -34,6 +36,21 @@ export class Battle extends Scene {
     background.showForest();
 
     // render out the player and enemy monsters
+    this.#activeEnemyMonster = new BattleMonster(
+      {
+        scene: this,
+        monsterDetails: {
+          name: MONSTER_ASSET_KEYS.CARNODUSK,
+          assetKey: MONSTER_ASSET_KEYS.CARNODUSK,
+          maxHp: 25,
+          assetFrame: 0,
+          currentHp: 25,
+          baseAttack: 5,
+          attackIds: ["TACKLE", "SCRATCH", "BITE"],
+        },
+      },
+      { x: 768, y: 144 }
+    );
     this.add.image(768, 144, MONSTER_ASSET_KEYS.CARNODUSK, 0);
     this.add.image(256, 316, MONSTER_ASSET_KEYS.IGUANIGNITE, 0).setFlipX(true);
 
@@ -81,7 +98,7 @@ export class Battle extends Scene {
         fontSize: "32px",
       }
     );
-    const enemyHealthBar = new HealthBar(this, 34, 34);
+    const enemyHealthBar = this.#activeEnemyMonster._healthBar;
     this.add.container(0, 0, [
       this.add
         .image(0, 0, BATTLE_ASSET_KEYS.HEALTH_BAR_BACKGROUND)
@@ -113,9 +130,9 @@ export class Battle extends Scene {
     playerHealthBar.setMeterPercentageAnimated(0.5, {
       duration: 1500,
       callback: () => {
-        console.log("animation completed!")
-      }
-    })
+        console.log("animation completed!");
+      },
+    });
   }
 
   update() {
