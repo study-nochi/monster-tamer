@@ -1,22 +1,17 @@
 import { Scene } from "phaser";
-import {
-  BATTLE_ASSET_KEYS,
-  BATTLE_BACKGROUND_ASSET_KEYS,
-  HEALTH_BAR_ASSET_KEYS,
-  MONSTER_ASSET_KEYS,
-} from "../constants/asset";
+import { BATTLE_ASSET_KEYS, MONSTER_ASSET_KEYS } from "../constants/asset";
 import { SCENE_KEY } from "../constants/scene";
 import { BattleMenu } from "../battle/ui/menu/battle-menu";
 import { BATTLE_PLAYER_INPUT } from "../battle/ui/menu/battle-menu-options";
 import { DIRECTION } from "../constants/direction";
 import { Background } from "../battle/background";
 import { HealthBar } from "../battle/ui/health-bar";
-import { BattleMonster } from "../battle/monsters/battle-monster";
+import { EnemyBattleMonster } from "../battle/monsters/enemy-bettle-monster";
 
 export class Battle extends Scene {
   #battleMenu: BattleMenu;
   #cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
-  #activeEnemyMonster: BattleMonster;
+  #activeEnemyMonster: EnemyBattleMonster;
 
   constructor() {
     super({
@@ -36,21 +31,18 @@ export class Battle extends Scene {
     background.showForest();
 
     // render out the player and enemy monsters
-    this.#activeEnemyMonster = new BattleMonster(
-      {
-        scene: this,
-        monsterDetails: {
-          name: MONSTER_ASSET_KEYS.CARNODUSK,
-          assetKey: MONSTER_ASSET_KEYS.CARNODUSK,
-          maxHp: 25,
-          assetFrame: 0,
-          currentHp: 25,
-          baseAttack: 5,
-          attackIds: ["TACKLE", "SCRATCH", "BITE"],
-        },
+    this.#activeEnemyMonster = new EnemyBattleMonster({
+      _scene: this,
+      _monsterDetails: {
+        name: MONSTER_ASSET_KEYS.CARNODUSK,
+        assetKey: MONSTER_ASSET_KEYS.CARNODUSK,
+        maxHp: 25,
+        assetFrame: 0,
+        currentHp: 25,
+        baseAttack: 5,
+        attackIds: ["TACKLE", "SCRATCH", "BITE"],
       },
-      { x: 768, y: 144 }
-    );
+    });
     this.add.image(768, 144, MONSTER_ASSET_KEYS.CARNODUSK, 0);
     this.add.image(256, 316, MONSTER_ASSET_KEYS.IGUANIGNITE, 0).setFlipX(true);
 
@@ -128,11 +120,13 @@ export class Battle extends Scene {
     this.#cursorKeys = this.input.keyboard!.createCursorKeys();
     // this.#cursorKeys.down;
     playerHealthBar.setMeterPercentageAnimated(0.5, {
-      duration: 1500,
+      duration: 3000,
       callback: () => {
         console.log("animation completed!");
       },
     });
+    this.#activeEnemyMonster.takeDamage(30);
+    console.log(this.#activeEnemyMonster.isFainted);
   }
 
   update() {
