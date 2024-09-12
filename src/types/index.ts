@@ -12,7 +12,7 @@ export interface Monster {
   currentLevel: number;
   currentHp: number;
   baseAttack: number;
-  attackIds: string[];
+  attackIds: number[];
 }
 
 export interface Coordinate {

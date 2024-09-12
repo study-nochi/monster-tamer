@@ -3,6 +3,7 @@ import { SCENE_KEY } from "../constants/scene";
 import {
   BATTLE_ASSET_KEYS,
   BATTLE_BACKGROUND_ASSET_KEYS,
+  DATA_ASSET_KEYS,
   HEALTH_BAR_ASSET_KEYS,
   MONSTER_ASSET_KEYS,
   UI_ASSET_KEYS,
@@ -21,6 +22,7 @@ export class Preload extends Scene {
 
     const monsterTamerAssetPath = "assets/images/monster-tamer";
     const kenneysAssetPath = "assets/images/kenneys-assets";
+    const dataAssetPath = "assets/data";
 
     // battle backgrounds
     this.load.image(
@@ -76,6 +78,9 @@ export class Preload extends Scene {
       UI_ASSET_KEYS.CURSOR,
       `${monsterTamerAssetPath}/ui/cursor.png`
     );
+
+    // load json data
+    this.load.json(DATA_ASSET_KEYS.ATTACKS, `${dataAssetPath}/attacks.json`);
   }
 
   create() {

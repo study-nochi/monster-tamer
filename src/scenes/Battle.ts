@@ -14,12 +14,18 @@ export class Battle extends Scene {
   #cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
   #activeEnemyMonster: EnemyBattleMonster;
   #activePlayerMonster: PlayerBattleMonster;
+  #activePlayerAttackIndex: number;
 
   constructor() {
     super({
       key: SCENE_KEY.BATTLE_SCENE,
       active: true,
     });
+  }
+
+  init() {
+    console.log(`[${Battle.name}:init] invoked`);
+    this.#activePlayerAttackIndex = -1;
   }
 
   preload() {
@@ -43,7 +49,7 @@ export class Battle extends Scene {
         currentHp: 25,
         baseAttack: 5,
         currentLevel: 5,
-        attackIds: ["TACKLE", "SCRATCH", "BITE"],
+        attackIds: [1],
       },
     });
 
@@ -57,96 +63,15 @@ export class Battle extends Scene {
         currentHp: 25,
         baseAttack: 5,
         currentLevel: 5,
-        attackIds: ["TACKLE", "SCRATCH", "BITE"],
+        attackIds: [2, 1],
       },
     });
 
-    // this.add.image(768, 144, MONSTER_ASSET_KEYS.CARNODUSK, 0);
-    // this.add.image(256, 316, MONSTER_ASSET_KEYS.IGUANIGNITE, 0).setFlipX(true);
-
-    // render out the health bars
-    // const playerMonsterName = this.add.text(
-    //   30,
-    //   20,
-    //   MONSTER_ASSET_KEYS.IGUANIGNITE,
-    //   {
-    //     color: "#7E3D3F",
-    //     fontSize: "32px",
-    //   }
-    // );
-    // const playerHealthBar = new HealthBar(this, 34, 34);
-    // this.add.container(556, 318, [
-    //   this.add
-    //     .image(0, 0, BATTLE_ASSET_KEYS.HEALTH_BAR_BACKGROUND)
-    //     .setOrigin(0),
-    //   playerMonsterName,
-    //   playerHealthBar.container,
-    //   this.add.text(playerMonsterName.width + 35, 23, "L5", {
-    //     color: "#ED474B",
-    //     fontSize: "28px",
-    //   }),
-    //   this.add.text(30, 55, "HP", {
-    //     color: "#FF6505",
-    //     fontSize: "24px",
-    //     fontStyle: "italic",
-    //   }),
-    //   this.add
-    //     .text(443, 80, "25/25", {
-    //       color: "#7E3D3F",
-    //       fontSize: "16px",
-    //     })
-    //     .setOrigin(1, 0),
-    // ]);
-
-    // render out the enemy health bars
-    // const enemyHealthBar = this.#activeEnemyMonster._healthBar;
-    // const enemyMonsterName = this.add.text(
-    //   30,
-    //   20,
-    //   MONSTER_ASSET_KEYS.CARNODUSK,
-    //   {
-    //     color: "#7E3D3F",
-    //     fontSize: "32px",
-    //   }
-    // );
-    // this.add.container(0, 0, [
-    //   this.add
-    //     .image(0, 0, BATTLE_ASSET_KEYS.HEALTH_BAR_BACKGROUND)
-    //     .setOrigin(0)
-    //     .setScale(1, 0.8),
-    //   enemyMonsterName,
-    //   enemyHealthBar.container,
-    //   this.add.text(enemyMonsterName.width + 35, 23, "L5", {
-    //     color: "#ED474B",
-    //     fontSize: "28px",
-    //   }),
-    //   this.add.text(30, 55, "HP", {
-    //     color: "#FF6505",
-    //     fontSize: "24px",
-    //     fontStyle: "italic",
-    //   }),
-    //   this.add.text(443, 80, "25/25", {
-    //     color: "#7E3D3F",
-    //     fontSize: "16px",
-    //   }),
-    // ]);
-
     // render out the main and sub info panes
-    this.#battleMenu = new BattleMenu(this);
+    this.#battleMenu = new BattleMenu(this, this.#activePlayerMonster);
     this.#battleMenu.showMainBattleMenu();
 
     this.#cursorKeys = this.input.keyboard!.createCursorKeys();
-    // this.#cursorKeys.down;
-    // playerHealthBar.setMeterPercentageAnimated(0.5, {
-    //   duration: 3000,
-    //   callback: () => {
-    //     console.log("animation completed!");
-    //   },
-    // });
-    this.#activeEnemyMonster.takeDamage(20, () => {
-      this.#activePlayerMonster.takeDamage(10, () => {});
-    });
-    console.log(this.#activeEnemyMonster.isFainted);
   }
 
   update() {
@@ -161,17 +86,19 @@ export class Battle extends Scene {
       if (this.#battleMenu.selectedAttack === undefined) {
         return;
       }
+
+      this.#activePlayerAttackIndex = this.#battleMenu.selectedAttack;
+
+      if (!this.#activePlayerMonster.attacks[this.#activePlayerAttackIndex]) {
+        return;
+      }
+
       console.log(
         `Player selected the following move: ${this.#battleMenu.selectedAttack}`
       );
+
       this.#battleMenu.hideMonsterAttackSubMenu();
-      this.#battleMenu.updateInfoPaneMessagesAndWaifForInput(
-        ["Your monster attacks the enemy!"],
-        () => {
-          this.#battleMenu.showMonsterAttackSubMenu();
-        }
-      );
-      return;
+      this.#handleBattleSequence();
     }
 
     if (Phaser.Input.Keyboard.JustDown(this.#cursorKeys.shift)) {
@@ -193,5 +120,49 @@ export class Battle extends Scene {
     if (selectedDirection !== DIRECTION.NONE) {
       this.#battleMenu.handlePlayerInput(selectedDirection);
     }
+  }
+
+  #handleBattleSequence() {
+    // greneral battle sequence
+    // show attack used, brief pause
+    // then play attack animation, brief pause
+    // then play health bar animation, brief pause
+    // then repeat the steps above for the enemy monster
+
+    this.#playerAttack();
+  }
+
+  #playerAttack() {
+    this.#battleMenu.updateInfoPaneMessagesAndWaifForInput(
+      [
+        `${this.#activePlayerMonster.name} used ${
+          this.#activePlayerMonster.attacks[this.#activePlayerAttackIndex].name
+        }`,
+      ],
+      () => {
+        this.time.delayedCall(500, () => {
+          this.#activeEnemyMonster.takeDamage(20, () => {
+            this.#enemyAttack();
+          });
+        });
+      }
+    );
+  }
+
+  #enemyAttack() {
+    this.#battleMenu.updateInfoPaneMessagesAndWaifForInput(
+      [
+        `${this.#activeEnemyMonster.name} used ${
+          this.#activeEnemyMonster.attacks[0].name
+        }`,
+      ],
+      () => {
+        this.time.delayedCall(500, () => {
+          this.#activePlayerMonster.takeDamage(20, () => {
+            this.#battleMenu.showMainBattleMenu();
+          });
+        });
+      }
+    );
   }
 }
