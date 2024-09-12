@@ -1,9 +1,6 @@
-import {
-  BATTLE_ASSET_KEYS,
-  DATA_ASSET_KEYS,
-  MONSTER_ASSET_KEYS,
-} from "../../constants/asset";
+import { BATTLE_ASSET_KEYS, MONSTER_ASSET_KEYS } from "../../constants/asset";
 import { Monster, Coordinate, BattleMonsterConfig, Attack } from "../../types";
+import { DataUtils } from "../../utils/data-utils";
 import { HealthBar } from "../ui/health-bar";
 
 export class BattleMonster implements BattleMonsterConfig {
@@ -38,12 +35,8 @@ export class BattleMonster implements BattleMonsterConfig {
     );
     this.#createHealthBarComponents(config.scaleHealthBarBackgroundImageByY);
 
-    const data: Attack[] = this._scene.cache.json.get(DATA_ASSET_KEYS.ATTACKS);
-    console.log("data", data);
-    console.log("this._scene.cache.json", this._scene.cache.json);
-
     this._monsterDetails.attackIds.forEach((attackId) => {
-      const monsterAttack = data?.find((attack) => attack.id === attackId);
+      const monsterAttack = DataUtils.getMonsterAttack(this._scene, attackId);
       if (monsterAttack) {
         this._monsterAttack.push(monsterAttack);
       }

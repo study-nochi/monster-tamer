@@ -178,7 +178,7 @@ export class BattleMenu {
     this.hideMainBattleMenu();
   }
 
-  updateInfoPaneMessagesAndWaifForInput(
+  updateInfoPaneMessagesAndWaitForInput(
     messages: string[],
     callback?: () => void
   ) {
@@ -507,7 +507,7 @@ export class BattleMenu {
     if (this.#selectedBattleMenuOption === BATTLE_MENU_OPTIONS.ITEM) {
       // TODO
       this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_ITEM;
-      this.updateInfoPaneMessagesAndWaifForInput(["Your bag is empty..."], () =>
+      this.updateInfoPaneMessagesAndWaitForInput(["Your bag is empty..."], () =>
         this.#switchToMainBattleMenu()
       );
       return;
@@ -516,7 +516,7 @@ export class BattleMenu {
     if (this.#selectedBattleMenuOption === BATTLE_MENU_OPTIONS.SWITCH) {
       // TODO
       this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_SWITCH;
-      this.updateInfoPaneMessagesAndWaifForInput(
+      this.updateInfoPaneMessagesAndWaitForInput(
         ["You have no other monsters in your party..."],
         () => this.#switchToMainBattleMenu()
       );
@@ -526,7 +526,7 @@ export class BattleMenu {
     if (this.#selectedBattleMenuOption === BATTLE_MENU_OPTIONS.FLEE) {
       // TODO
       this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_FLEE;
-      this.updateInfoPaneMessagesAndWaifForInput(
+      this.updateInfoPaneMessagesAndWaitForInput(
         ["You fail to run away..."],
         () => this.#switchToMainBattleMenu()
       );

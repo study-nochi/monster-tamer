@@ -1,6 +1,6 @@
 import { Scene } from "phaser";
 import { BATTLE_ASSET_KEYS, MONSTER_ASSET_KEYS } from "../constants/asset";
-import { SCENE_KEY } from "../constants/scene";
+import { SCENE_KEYS } from "../constants/scene";
 import { BattleMenu } from "../battle/ui/menu/battle-menu";
 import { BATTLE_PLAYER_INPUT } from "../battle/ui/menu/battle-menu-options";
 import { DIRECTION } from "../constants/direction";
@@ -18,7 +18,7 @@ export class Battle extends Scene {
 
   constructor() {
     super({
-      key: SCENE_KEY.BATTLE_SCENE,
+      key: SCENE_KEYS.BATTLE_SCENE,
       active: true,
     });
   }
@@ -47,7 +47,7 @@ export class Battle extends Scene {
         maxHp: 25,
         assetFrame: 0,
         currentHp: 25,
-        baseAttack: 5,
+        baseAttack: 25,
         currentLevel: 5,
         attackIds: [1],
       },
@@ -133,7 +133,7 @@ export class Battle extends Scene {
   }
 
   #playerAttack() {
-    this.#battleMenu.updateInfoPaneMessagesAndWaifForInput(
+    this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
       [
         `${this.#activePlayerMonster.name} used ${
           this.#activePlayerMonster.attacks[this.#activePlayerAttackIndex].name
@@ -141,16 +141,24 @@ export class Battle extends Scene {
       ],
       () => {
         this.time.delayedCall(500, () => {
-          this.#activeEnemyMonster.takeDamage(20, () => {
-            this.#enemyAttack();
-          });
+          this.#activeEnemyMonster.takeDamage(
+            this.#activePlayerMonster.baseAttack,
+            () => {
+              this.#enemyAttack();
+            }
+          );
         });
       }
     );
   }
 
   #enemyAttack() {
-    this.#battleMenu.updateInfoPaneMessagesAndWaifForInput(
+    if (this.#activeEnemyMonster.isFainted) {
+      this.#postBattleSequenceCheck();
+      return;
+    }
+
+    this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
       [
         `${this.#activeEnemyMonster.name} used ${
           this.#activeEnemyMonster.attacks[0].name
@@ -158,10 +166,52 @@ export class Battle extends Scene {
       ],
       () => {
         this.time.delayedCall(500, () => {
-          this.#activePlayerMonster.takeDamage(20, () => {
-            this.#battleMenu.showMainBattleMenu();
-          });
+          this.#activePlayerMonster.takeDamage(
+            this.#activeEnemyMonster.baseAttack,
+            () => {
+              this.#battleMenu.showMainBattleMenu();
+            }
+          );
         });
+      }
+    );
+  }
+
+  #postBattleSequenceCheck() {
+    if (this.#activeEnemyMonster.isFainted) {
+      this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
+        [
+          `Wild ${this.#activeEnemyMonster.name} fainted!`,
+          "You have gained some experience",
+        ],
+        () => {
+          this.#transitionToNextScene();
+        }
+      );
+      return;
+    }
+
+    if (this.#activePlayerMonster.isFainted) {
+      this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
+        [
+          `Wild ${this.#activePlayerMonster.name} fainted!`,
+          "You have no more monsters, escaping to safety...",
+        ],
+        () => {
+          this.#transitionToNextScene();
+        }
+      );
+      return;
+    }
+    this.#battleMenu.showMainBattleMenu();
+  }
+
+  #transitionToNextScene() {
+    this.cameras.main.fadeOut(600, 0, 0, 0);
+    this.cameras.main.once(
+      Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE,
+      () => {
+        this.scene.start(SCENE_KEYS.BATTLE_SCENE);
       }
     );
   }

@@ -1,5 +1,5 @@
 import { Scene } from "phaser";
-import { SCENE_KEY } from "../constants/scene";
+import { SCENE_KEYS } from "../constants/scene";
 import {
   BATTLE_ASSET_KEYS,
   BATTLE_BACKGROUND_ASSET_KEYS,
@@ -12,7 +12,7 @@ import {
 export class Preload extends Scene {
   constructor() {
     super({
-      key: SCENE_KEY.PRELOAD_SCENE,
+      key: SCENE_KEYS.PRELOAD_SCENE,
       active: true,
     });
   }
@@ -85,6 +85,6 @@ export class Preload extends Scene {
 
   create() {
     console.log(`[${Preload.name}:create] invoked`);
-    this.scene.start(SCENE_KEY.BATTLE_SCENE);
+    this.scene.start(SCENE_KEYS.BATTLE_SCENE);
   }
 }
