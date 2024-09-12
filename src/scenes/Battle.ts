@@ -169,7 +169,7 @@ export class Battle extends Scene {
           this.#activePlayerMonster.takeDamage(
             this.#activeEnemyMonster.baseAttack,
             () => {
-              this.#battleMenu.showMainBattleMenu();
+              this.#postBattleSequenceCheck();
             }
           );
         });
