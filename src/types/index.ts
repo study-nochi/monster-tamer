@@ -1,6 +1,7 @@
 export interface BattleMonsterConfig {
   _scene: Phaser.Scene;
   _monsterDetails: Monster;
+  scaleHealthBarBackgroundImageByY?: number;
 }
 
 export interface Monster {
@@ -8,6 +9,7 @@ export interface Monster {
   assetKey: string;
   maxHp: number;
   assetFrame: number;
+  currentLevel: number;
   currentHp: number;
   baseAttack: number;
   attackIds: string[];

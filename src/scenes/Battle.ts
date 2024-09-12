@@ -7,11 +7,13 @@ import { DIRECTION } from "../constants/direction";
 import { Background } from "../battle/background";
 import { HealthBar } from "../battle/ui/health-bar";
 import { EnemyBattleMonster } from "../battle/monsters/enemy-bettle-monster";
+import { PlayerBattleMonster } from "../battle/monsters/player-battle-monster";
 
 export class Battle extends Scene {
   #battleMenu: BattleMenu;
   #cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
   #activeEnemyMonster: EnemyBattleMonster;
+  #activePlayerMonster: PlayerBattleMonster;
 
   constructor() {
     super({
@@ -40,78 +42,94 @@ export class Battle extends Scene {
         assetFrame: 0,
         currentHp: 25,
         baseAttack: 5,
+        currentLevel: 5,
         attackIds: ["TACKLE", "SCRATCH", "BITE"],
       },
     });
-    this.add.image(768, 144, MONSTER_ASSET_KEYS.CARNODUSK, 0);
-    this.add.image(256, 316, MONSTER_ASSET_KEYS.IGUANIGNITE, 0).setFlipX(true);
+
+    this.#activePlayerMonster = new PlayerBattleMonster({
+      _scene: this,
+      _monsterDetails: {
+        name: MONSTER_ASSET_KEYS.IGUANIGNITE,
+        assetKey: MONSTER_ASSET_KEYS.IGUANIGNITE,
+        maxHp: 25,
+        assetFrame: 0,
+        currentHp: 25,
+        baseAttack: 5,
+        currentLevel: 5,
+        attackIds: ["TACKLE", "SCRATCH", "BITE"],
+      },
+    });
+
+    // this.add.image(768, 144, MONSTER_ASSET_KEYS.CARNODUSK, 0);
+    // this.add.image(256, 316, MONSTER_ASSET_KEYS.IGUANIGNITE, 0).setFlipX(true);
 
     // render out the health bars
-    const playerMonsterName = this.add.text(
-      30,
-      20,
-      MONSTER_ASSET_KEYS.IGUANIGNITE,
-      {
-        color: "#7E3D3F",
-        fontSize: "32px",
-      }
-    );
-    const playerHealthBar = new HealthBar(this, 34, 34);
-    this.add.container(556, 318, [
-      this.add
-        .image(0, 0, BATTLE_ASSET_KEYS.HEALTH_BAR_BACKGROUND)
-        .setOrigin(0),
-      playerMonsterName,
-      playerHealthBar.container,
-      this.add.text(playerMonsterName.width + 35, 23, "L5", {
-        color: "#ED474B",
-        fontSize: "28px",
-      }),
-      this.add.text(30, 55, "HP", {
-        color: "#FF6505",
-        fontSize: "24px",
-        fontStyle: "italic",
-      }),
-      this.add
-        .text(443, 80, "25/25", {
-          color: "#7E3D3F",
-          fontSize: "16px",
-        })
-        .setOrigin(1, 0),
-    ]);
+    // const playerMonsterName = this.add.text(
+    //   30,
+    //   20,
+    //   MONSTER_ASSET_KEYS.IGUANIGNITE,
+    //   {
+    //     color: "#7E3D3F",
+    //     fontSize: "32px",
+    //   }
+    // );
+    // const playerHealthBar = new HealthBar(this, 34, 34);
+    // this.add.container(556, 318, [
+    //   this.add
+    //     .image(0, 0, BATTLE_ASSET_KEYS.HEALTH_BAR_BACKGROUND)
+    //     .setOrigin(0),
+    //   playerMonsterName,
+    //   playerHealthBar.container,
+    //   this.add.text(playerMonsterName.width + 35, 23, "L5", {
+    //     color: "#ED474B",
+    //     fontSize: "28px",
+    //   }),
+    //   this.add.text(30, 55, "HP", {
+    //     color: "#FF6505",
+    //     fontSize: "24px",
+    //     fontStyle: "italic",
+    //   }),
+    //   this.add
+    //     .text(443, 80, "25/25", {
+    //       color: "#7E3D3F",
+    //       fontSize: "16px",
+    //     })
+    //     .setOrigin(1, 0),
+    // ]);
 
     // render out the enemy health bars
-    const enemyMonsterName = this.add.text(
-      30,
-      20,
-      MONSTER_ASSET_KEYS.CARNODUSK,
-      {
-        color: "#7E3D3F",
-        fontSize: "32px",
-      }
-    );
-    const enemyHealthBar = this.#activeEnemyMonster._healthBar;
-    this.add.container(0, 0, [
-      this.add
-        .image(0, 0, BATTLE_ASSET_KEYS.HEALTH_BAR_BACKGROUND)
-        .setOrigin(0)
-        .setScale(1, 0.8),
-      enemyMonsterName,
-      enemyHealthBar.container,
-      this.add.text(enemyMonsterName.width + 35, 23, "L5", {
-        color: "#ED474B",
-        fontSize: "28px",
-      }),
-      this.add.text(30, 55, "HP", {
-        color: "#FF6505",
-        fontSize: "24px",
-        fontStyle: "italic",
-      }),
-      this.add.text(443, 80, "25/25", {
-        color: "#7E3D3F",
-        fontSize: "16px",
-      }),
-    ]);
+    // const enemyHealthBar = this.#activeEnemyMonster._healthBar;
+    // const enemyMonsterName = this.add.text(
+    //   30,
+    //   20,
+    //   MONSTER_ASSET_KEYS.CARNODUSK,
+    //   {
+    //     color: "#7E3D3F",
+    //     fontSize: "32px",
+    //   }
+    // );
+    // this.add.container(0, 0, [
+    //   this.add
+    //     .image(0, 0, BATTLE_ASSET_KEYS.HEALTH_BAR_BACKGROUND)
+    //     .setOrigin(0)
+    //     .setScale(1, 0.8),
+    //   enemyMonsterName,
+    //   enemyHealthBar.container,
+    //   this.add.text(enemyMonsterName.width + 35, 23, "L5", {
+    //     color: "#ED474B",
+    //     fontSize: "28px",
+    //   }),
+    //   this.add.text(30, 55, "HP", {
+    //     color: "#FF6505",
+    //     fontSize: "24px",
+    //     fontStyle: "italic",
+    //   }),
+    //   this.add.text(443, 80, "25/25", {
+    //     color: "#7E3D3F",
+    //     fontSize: "16px",
+    //   }),
+    // ]);
 
     // render out the main and sub info panes
     this.#battleMenu = new BattleMenu(this);
@@ -119,13 +137,15 @@ export class Battle extends Scene {
 
     this.#cursorKeys = this.input.keyboard!.createCursorKeys();
     // this.#cursorKeys.down;
-    playerHealthBar.setMeterPercentageAnimated(0.5, {
-      duration: 3000,
-      callback: () => {
-        console.log("animation completed!");
-      },
+    // playerHealthBar.setMeterPercentageAnimated(0.5, {
+    //   duration: 3000,
+    //   callback: () => {
+    //     console.log("animation completed!");
+    //   },
+    // });
+    this.#activeEnemyMonster.takeDamage(20, () => {
+      this.#activePlayerMonster.takeDamage(10, () => {});
     });
-    this.#activeEnemyMonster.takeDamage(30);
     console.log(this.#activeEnemyMonster.isFainted);
   }
 
