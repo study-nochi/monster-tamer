@@ -10,6 +10,7 @@ import { PlayerBattleMonster } from "../battle/monsters/player-battle-monster";
 import { StateMachine } from "../utils/state-machine";
 import { BATTLE_STATES } from "../constants/battle";
 import { SKIP_BATTLE_ANIMATION } from "../constants/config";
+import { IceShard } from "../battle/attacks/ice-shard";
 
 export class Battle extends Scene {
   #battleMenu: BattleMenu;
@@ -73,6 +74,9 @@ export class Battle extends Scene {
     this.#createBattleStateMachine();
 
     this.#cursorKeys = this.input.keyboard!.createCursorKeys();
+
+    const atk = new IceShard(this, { x: 745, y: 140 });
+    atk.playAnimation();
   }
 
   update() {

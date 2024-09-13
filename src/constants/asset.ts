@@ -27,3 +27,9 @@ export const DATA_ASSET_KEYS = Object.freeze({
 });
 
 export const KENNEY_FUTURE_NARROW_FONT_NAME = "Kenny-Future-Narrow";
+
+export const ATTACK_ASSET_KEYS = Object.freeze({
+  ICE_SHARD: "ICE_SHARD",
+  ICE_SHARD_START: "ICE_SHARD_START",
+  SLASH: "SLASH",
+});
