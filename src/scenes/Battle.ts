@@ -8,6 +8,7 @@ import { Background } from "../battle/background";
 import { HealthBar } from "../battle/ui/health-bar";
 import { EnemyBattleMonster } from "../battle/monsters/enemy-bettle-monster";
 import { PlayerBattleMonster } from "../battle/monsters/player-battle-monster";
+import { StateMachine } from "../utils/state-machine";
 
 export class Battle extends Scene {
   #battleMenu: BattleMenu;
@@ -15,6 +16,7 @@ export class Battle extends Scene {
   #activeEnemyMonster: EnemyBattleMonster;
   #activePlayerMonster: PlayerBattleMonster;
   #activePlayerAttackIndex: number;
+  #battleStateMachine: StateMachine;
 
   constructor() {
     super({
@@ -70,6 +72,21 @@ export class Battle extends Scene {
     // render out the main and sub info panes
     this.#battleMenu = new BattleMenu(this, this.#activePlayerMonster);
     this.#battleMenu.showMainBattleMenu();
+
+    this.#battleStateMachine = new StateMachine("battle", this);
+    this.#battleStateMachine.addState({
+      name: "INTRO",
+      onEnter: () => {
+        this.time.delayedCall(1000, () => {
+          this.#battleStateMachine.setState("BATTLE");
+        });
+      },
+    });
+
+    this.#battleStateMachine.addState({
+      name: "BATTLE",
+    });
+    this.#battleStateMachine.setState("INTRO");
 
     this.#cursorKeys = this.input.keyboard!.createCursorKeys();
   }
