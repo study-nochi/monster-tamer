@@ -1,6 +1,7 @@
 import { UI_ASSET_KEYS } from "../../../constants/asset";
 import { DIRECTION } from "../../../constants/direction";
 import { exhaustiveGuard } from "../../../utils/guard";
+import { animateText } from "../../../utils/test-utils";
 import { BattleMonster } from "../../monsters/battle-monster";
 import { BATTLE_UI_TEXT_STYLE } from "./battle-menu-config";
 import {
@@ -23,26 +24,31 @@ export class BattleMenu {
   #mainBattleMenuCursorPhaserImageGameObject: Phaser.GameObjects.Image;
   #attackBattleMenuCursorPhaserImageGameObject: Phaser.GameObjects.Image;
   #selectedBattleMenuOption: BATTLE_MENU_OPTIONS;
-  #selectedAttackMoveOption: ATTACK_MOVE_OPTIONS;
+  #selectedAttackMenuOption: ATTACK_MOVE_OPTIONS;
   #activeBattleMenu: ACTIVE_BATTLE_MENU;
   #queuedInfoPanelMessages: string[];
   #queuedInfoPanelCallback: (() => void) | undefined;
   #waitingForPlayerInput: boolean;
-  #selectedAttckIndex?: number;
+  #selectedAttackIndex?: number;
   #activePlayerMonster: BattleMonster;
   #userInputCursorPhaserImageGameObject: Phaser.GameObjects.Image;
   #userInputCursorPhaserTween: Phaser.Tweens.Tween;
+  #queuedMessagesSkipAnimation: boolean;
+  #queuedMessageAnimationPlaying: boolean;
 
   constructor(scene: Phaser.Scene, activePlayerMonster: BattleMonster) {
     this.#scene = scene;
+    this.#activePlayerMonster = activePlayerMonster;
     this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_MAIN;
     this.#selectedBattleMenuOption = BATTLE_MENU_OPTIONS.FIGHT;
-    this.#selectedAttackMoveOption = ATTACK_MOVE_OPTIONS.MOVE_1;
-    this.#queuedInfoPanelMessages = [];
+    this.#selectedAttackMenuOption = ATTACK_MOVE_OPTIONS.MOVE_1;
     this.#queuedInfoPanelCallback = undefined;
+    this.#queuedInfoPanelMessages = [];
     this.#waitingForPlayerInput = false;
-    this.#activePlayerMonster = activePlayerMonster;
 
+    this.#selectedAttackIndex = undefined;
+    this.#queuedMessagesSkipAnimation = false;
+    this.#queuedMessageAnimationPlaying = false;
     this.#createMainInfoPane();
     this.#createMainBattleMenu();
     this.#createMonsterAttackSubMenu();
@@ -51,7 +57,7 @@ export class BattleMenu {
 
   get selectedAttack() {
     if (this.#activeBattleMenu === ACTIVE_BATTLE_MENU.BATTLE_MOVE_SELECT) {
-      return this.#selectedAttckIndex;
+      return this.#selectedAttackIndex;
     }
     return undefined;
   }
@@ -61,14 +67,14 @@ export class BattleMenu {
     this.#battleTextGameObjectLine1.setText("what should");
     this.#mainBattleMenuPhaserContainerGameObject.setAlpha(1);
     this.#battleTextGameObjectLine1.setAlpha(1);
-    this.#battleTextGameObjectLine2.setAlpha(2);
+    this.#battleTextGameObjectLine2.setAlpha(1);
 
     this.#selectedBattleMenuOption = BATTLE_MENU_OPTIONS.FIGHT;
     this.#mainBattleMenuCursorPhaserImageGameObject.setPosition(
       BATTLE_MENU_CURSOR_POSITIONS.x,
       BATTLE_MENU_CURSOR_POSITIONS.y
     );
-    this.#selectedAttckIndex = undefined;
+    this.#selectedAttackIndex = undefined;
   }
 
   hideMainBattleMenu() {
@@ -80,6 +86,11 @@ export class BattleMenu {
   showMonsterAttackSubMenu() {
     this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_MOVE_SELECT;
     this.#moveSelectionSubBattleMenuPhaserContainerGameObject.setAlpha(1);
+  }
+
+  hideMonsterAttackSubMenu() {
+    this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_MAIN;
+    this.#moveSelectionSubBattleMenuPhaserContainerGameObject.setAlpha(0);
   }
 
   playInputCursorAnimation() {
@@ -97,43 +108,118 @@ export class BattleMenu {
     this.#userInputCursorPhaserTween.pause();
   }
 
-  hideMonsterAttackSubMenu() {
-    this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_MAIN;
-    this.#moveSelectionSubBattleMenuPhaserContainerGameObject.setAlpha(0);
-  }
-
   handlePlayerInput(input: BATTLE_PLAYER_INPUT | DIRECTION) {
-    if (
-      this.#waitingForPlayerInput &&
-      (input === BATTLE_PLAYER_INPUT.CANCEL || input === BATTLE_PLAYER_INPUT.OK)
-    ) {
+    if (this.#queuedMessageAnimationPlaying && input === "OK") {
+      return;
+    }
+
+    if (this.#waitingForPlayerInput && (input === "CANCEL" || input === "OK")) {
       this.#updateInfoPaneWithMessage();
       return;
     }
 
-    if (input === BATTLE_PLAYER_INPUT.CANCEL) {
+    if (input === "CANCEL") {
       this.#switchToMainBattleMenu();
       return;
     }
-
-    if (input === BATTLE_PLAYER_INPUT.OK) {
+    if (input === "OK") {
       if (this.#activeBattleMenu === ACTIVE_BATTLE_MENU.BATTLE_MAIN) {
         this.#handlePlayerChooseMainBattleOption();
         return;
       }
-
       if (this.#activeBattleMenu === ACTIVE_BATTLE_MENU.BATTLE_MOVE_SELECT) {
-        // TODO
         this.#handlePlayerChooseAttack();
         return;
       }
       return;
     }
-
     this.#updateSelectedBattleMenuOptionFromInput(input);
-    this.#moveMainBattleMenuCursor();
     this.#updateSelectedMoveMenuOptionFromInput(input);
+    this.#moveMainBattleMenuCursor();
     this.#moveMoveSelectBattleMenuCursor();
+  }
+
+  updateInfoPaneMessageNoInputRequired(
+    message: string,
+    callback?: () => void,
+    skipAnimation: boolean = false
+  ) {
+    this.#battleTextGameObjectLine1.setText("").setAlpha(1);
+
+    if (skipAnimation) {
+      this.#battleTextGameObjectLine1.setText(message);
+      this.#waitingForPlayerInput = false;
+      if (callback) {
+        callback();
+      }
+      return;
+    }
+
+    animateText(this.#scene, this.#battleTextGameObjectLine1, message, {
+      delay: 50,
+      callback: () => {
+        this.#waitingForPlayerInput = false;
+        if (callback) {
+          callback();
+        }
+      },
+    });
+  }
+
+  updateInfoPaneMessagesAndWaitForInput(
+    messages: string[],
+    callback?: () => void,
+    skipAnimation = false
+  ) {
+    this.#queuedInfoPanelMessages = messages;
+    this.#queuedInfoPanelCallback = callback;
+    this.#queuedMessagesSkipAnimation = skipAnimation;
+
+    this.#updateInfoPaneWithMessage();
+  }
+
+  #updateInfoPaneWithMessage() {
+    this.#waitingForPlayerInput = false;
+    this.#battleTextGameObjectLine1.setText("").setAlpha(1);
+    this.hideInputCursor();
+
+    // check if all messages have been displayed from the queue and call the callback
+    if (this.#queuedInfoPanelMessages.length === 0) {
+      if (this.#queuedInfoPanelCallback) {
+        this.#queuedInfoPanelCallback();
+        this.#queuedInfoPanelCallback = undefined;
+      }
+      return;
+    }
+
+    // get first message from queue and animate message
+    const messageToDisplay = this.#queuedInfoPanelMessages.shift() ?? "";
+
+    if (this.#queuedMessagesSkipAnimation) {
+      this.#battleTextGameObjectLine1.setText(messageToDisplay);
+      this.#queuedMessageAnimationPlaying = false;
+      this.#waitingForPlayerInput = true;
+      if (this.#queuedInfoPanelCallback) {
+        this.#queuedInfoPanelCallback();
+        this.#queuedInfoPanelCallback = undefined;
+      }
+      return;
+    }
+
+    this.#queuedMessageAnimationPlaying = true;
+    animateText(
+      this.#scene,
+      this.#battleTextGameObjectLine1,
+      messageToDisplay,
+      {
+        delay: 50,
+        callback: () => {
+          this.playInputCursorAnimation();
+          this.#waitingForPlayerInput = true;
+          this.#queuedMessageAnimationPlaying = false;
+        },
+      }
+    );
   }
 
   // Todo: update to use monster data that is passed into this class instance
@@ -196,51 +282,6 @@ export class BattleMenu {
 
     this.hideMainBattleMenu();
   }
-  updateInfoPaneMessagesNoInputRequired(
-    messages: string,
-    callback?: () => void
-  ) {
-    this.#battleTextGameObjectLine1.setText("").setAlpha(1);
-
-    // TODO: animate messages
-    this.#battleTextGameObjectLine1.setText(messages);
-    this.#waitingForPlayerInput = false;
-
-    if (callback) {
-      callback();
-    }
-  }
-
-  updateInfoPaneMessagesAndWaitForInput(
-    messages: string[],
-    callback?: () => void
-  ) {
-    this.#queuedInfoPanelMessages = messages;
-    this.#queuedInfoPanelCallback = callback;
-
-    this.#updateInfoPaneWithMessage();
-  }
-
-  #updateInfoPaneWithMessage() {
-    this.#waitingForPlayerInput = false;
-    this.#battleTextGameObjectLine1.setText("").setAlpha(1);
-    this.hideInputCursor();
-
-    // check if all messages have been displayed from the queue and call the callback
-    if (this.#queuedInfoPanelMessages.length === 0) {
-      if (this.#queuedInfoPanelCallback) {
-        this.#queuedInfoPanelCallback?.();
-        this.#queuedInfoPanelCallback = undefined;
-      }
-      return;
-    }
-
-    // get first message from the queue and animate message
-    const messageToDisplay = this.#queuedInfoPanelMessages.shift();
-    this.#battleTextGameObjectLine1.setText(messageToDisplay ?? "");
-    this.#waitingForPlayerInput = true;
-    this.playInputCursorAnimation();
-  }
 
   #createMonsterAttackSubMenu() {
     this.#attackBattleMenuCursorPhaserImageGameObject = this.#scene.add
@@ -253,9 +294,10 @@ export class BattleMenu {
       .setOrigin(0.5)
       .setScale(2.5);
 
-    const attackNames: string[] = [];
-    for (let i = 0; i < 4; i++) {
-      attackNames.push(this.#activePlayerMonster.attacks[i]?.name ?? "-");
+    /** @type {string[]} */
+    const attackNames = [];
+    for (let i = 0; i < 4; i += 1) {
+      attackNames.push(this.#activePlayerMonster.attacks[i]?.name || "-");
     }
 
     this.#moveSelectionSubBattleMenuPhaserContainerGameObject =
@@ -270,17 +312,17 @@ export class BattleMenu {
   }
 
   #createMainInfoPane() {
-    const rectHeight = 124;
     const padding = 4;
+    const rectHeight = 124;
 
     this.#scene.add
       .rectangle(
-        0,
+        padding,
         this.#scene.scale.height - rectHeight - padding,
         this.#scene.scale.width - padding * 2,
         rectHeight,
         0xede4f3,
-        0.2
+        1
       )
       .setOrigin(0)
       .setStrokeStyle(8, 0xe4434a, 1);
@@ -374,6 +416,8 @@ export class BattleMenu {
       }
       return;
     }
+
+    exhaustiveGuard(this.#selectedBattleMenuOption);
   }
 
   #moveMainBattleMenuCursor() {
@@ -390,21 +434,18 @@ export class BattleMenu {
         return;
       case BATTLE_MENU_OPTIONS.SWITCH:
         this.#mainBattleMenuCursorPhaserImageGameObject.setPosition(
-          BATTLE_MENU_CURSOR_POSITIONS.x + DISTANCE_TO_MOVE_CURSOR.right,
+          228,
           BATTLE_MENU_CURSOR_POSITIONS.y
         );
         return;
       case BATTLE_MENU_OPTIONS.ITEM:
         this.#mainBattleMenuCursorPhaserImageGameObject.setPosition(
           BATTLE_MENU_CURSOR_POSITIONS.x,
-          BATTLE_MENU_CURSOR_POSITIONS.y + DISTANCE_TO_MOVE_CURSOR.down
+          86
         );
         return;
       case BATTLE_MENU_OPTIONS.FLEE:
-        this.#mainBattleMenuCursorPhaserImageGameObject.setPosition(
-          BATTLE_MENU_CURSOR_POSITIONS.x + DISTANCE_TO_MOVE_CURSOR.right,
-          BATTLE_MENU_CURSOR_POSITIONS.y + DISTANCE_TO_MOVE_CURSOR.down
-        );
+        this.#mainBattleMenuCursorPhaserImageGameObject.setPosition(228, 86);
         return;
       default:
         exhaustiveGuard(this.#selectedBattleMenuOption);
@@ -416,13 +457,13 @@ export class BattleMenu {
       return;
     }
 
-    if (this.#selectedAttackMoveOption === ATTACK_MOVE_OPTIONS.MOVE_1) {
+    if (this.#selectedAttackMenuOption === ATTACK_MOVE_OPTIONS.MOVE_1) {
       switch (direction) {
         case DIRECTION.RIGHT:
-          this.#selectedAttackMoveOption = ATTACK_MOVE_OPTIONS.MOVE_2;
+          this.#selectedAttackMenuOption = ATTACK_MOVE_OPTIONS.MOVE_2;
           return;
         case DIRECTION.DOWN:
-          this.#selectedAttackMoveOption = ATTACK_MOVE_OPTIONS.MOVE_3;
+          this.#selectedAttackMenuOption = ATTACK_MOVE_OPTIONS.MOVE_3;
           return;
         case DIRECTION.LEFT:
         case DIRECTION.UP:
@@ -434,13 +475,13 @@ export class BattleMenu {
       return;
     }
 
-    if (this.#selectedAttackMoveOption === ATTACK_MOVE_OPTIONS.MOVE_2) {
+    if (this.#selectedAttackMenuOption === ATTACK_MOVE_OPTIONS.MOVE_2) {
       switch (direction) {
         case DIRECTION.LEFT:
-          this.#selectedAttackMoveOption = ATTACK_MOVE_OPTIONS.MOVE_1;
+          this.#selectedAttackMenuOption = ATTACK_MOVE_OPTIONS.MOVE_1;
           return;
         case DIRECTION.DOWN:
-          this.#selectedAttackMoveOption = ATTACK_MOVE_OPTIONS.MOVE_4;
+          this.#selectedAttackMenuOption = ATTACK_MOVE_OPTIONS.MOVE_4;
           return;
         case DIRECTION.RIGHT:
         case DIRECTION.UP:
@@ -452,13 +493,13 @@ export class BattleMenu {
       return;
     }
 
-    if (this.#selectedAttackMoveOption === ATTACK_MOVE_OPTIONS.MOVE_3) {
+    if (this.#selectedAttackMenuOption === ATTACK_MOVE_OPTIONS.MOVE_3) {
       switch (direction) {
         case DIRECTION.RIGHT:
-          this.#selectedAttackMoveOption = ATTACK_MOVE_OPTIONS.MOVE_4;
+          this.#selectedAttackMenuOption = ATTACK_MOVE_OPTIONS.MOVE_4;
           return;
         case DIRECTION.UP:
-          this.#selectedAttackMoveOption = ATTACK_MOVE_OPTIONS.MOVE_1;
+          this.#selectedAttackMenuOption = ATTACK_MOVE_OPTIONS.MOVE_1;
           return;
         case DIRECTION.LEFT:
         case DIRECTION.DOWN:
@@ -470,13 +511,13 @@ export class BattleMenu {
       return;
     }
 
-    if (this.#selectedAttackMoveOption === ATTACK_MOVE_OPTIONS.MOVE_4) {
+    if (this.#selectedAttackMenuOption === ATTACK_MOVE_OPTIONS.MOVE_4) {
       switch (direction) {
         case DIRECTION.LEFT:
-          this.#selectedAttackMoveOption = ATTACK_MOVE_OPTIONS.MOVE_3;
+          this.#selectedAttackMenuOption = ATTACK_MOVE_OPTIONS.MOVE_3;
           return;
         case DIRECTION.UP:
-          this.#selectedAttackMoveOption = ATTACK_MOVE_OPTIONS.MOVE_2;
+          this.#selectedAttackMenuOption = ATTACK_MOVE_OPTIONS.MOVE_2;
           return;
         case DIRECTION.RIGHT:
         case DIRECTION.DOWN:
@@ -488,7 +529,7 @@ export class BattleMenu {
       return;
     }
 
-    exhaustiveGuard(this.#selectedAttackMoveOption);
+    exhaustiveGuard(this.#selectedAttackMenuOption);
   }
 
   #moveMoveSelectBattleMenuCursor() {
@@ -496,7 +537,7 @@ export class BattleMenu {
       return;
     }
 
-    switch (this.#selectedAttackMoveOption) {
+    switch (this.#selectedAttackMenuOption) {
       case ATTACK_MOVE_OPTIONS.MOVE_1:
         this.#attackBattleMenuCursorPhaserImageGameObject.setPosition(
           ATTACK_MENU_CURSOR.x,
@@ -522,7 +563,7 @@ export class BattleMenu {
         );
         return;
       default:
-        exhaustiveGuard(this.#selectedAttackMoveOption);
+        exhaustiveGuard(this.#selectedAttackMenuOption);
     }
   }
 
@@ -542,30 +583,49 @@ export class BattleMenu {
     }
 
     if (this.#selectedBattleMenuOption === BATTLE_MENU_OPTIONS.ITEM) {
-      // TODO
-      this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_ITEM;
-      this.updateInfoPaneMessagesAndWaitForInput(["Your bag is empty..."], () =>
-        this.#switchToMainBattleMenu()
+      // TODO: add feature in a future update
+      /*
+        for the time being, we will display text about the player having no items
+        and allow the player to navigate back to the main menu
+      */
+      this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_FLEE;
+      this.updateInfoPaneMessagesAndWaitForInput(
+        ["Your bag is empty..."],
+        () => {
+          this.#switchToMainBattleMenu();
+        }
       );
       return;
     }
 
     if (this.#selectedBattleMenuOption === BATTLE_MENU_OPTIONS.SWITCH) {
-      // TODO
+      // TODO: add feature in a future update
+      /*
+        for the time being, we will display text about the player having no more monsters
+        and allow the player to navigate back to the main menu
+      */
       this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_SWITCH;
       this.updateInfoPaneMessagesAndWaitForInput(
         ["You have no other monsters in your party..."],
-        () => this.#switchToMainBattleMenu()
+        () => {
+          this.#switchToMainBattleMenu();
+        }
       );
       return;
     }
 
     if (this.#selectedBattleMenuOption === BATTLE_MENU_OPTIONS.FLEE) {
-      // TODO
+      // TODO: add feature in a future update
+      /*
+        for the time being, we will display text about the player successfully running away
+        and then restart the Phaser scene after doing a screen fade out
+      */
       this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_FLEE;
       this.updateInfoPaneMessagesAndWaitForInput(
         ["You fail to run away..."],
-        () => this.#switchToMainBattleMenu()
+        () => {
+          this.#switchToMainBattleMenu();
+        }
       );
       return;
     }
@@ -576,7 +636,7 @@ export class BattleMenu {
   #handlePlayerChooseAttack() {
     let selectedMoveIndex = 0;
 
-    switch (this.#selectedAttackMoveOption) {
+    switch (this.#selectedAttackMenuOption) {
       case ATTACK_MOVE_OPTIONS.MOVE_1:
         selectedMoveIndex = 0;
         break;
@@ -590,10 +650,10 @@ export class BattleMenu {
         selectedMoveIndex = 3;
         break;
       default:
-        exhaustiveGuard(this.#selectedAttackMoveOption);
+        exhaustiveGuard(this.#selectedAttackMenuOption);
     }
 
-    this.#selectedAttckIndex = selectedMoveIndex;
+    this.#selectedAttackIndex = selectedMoveIndex;
   }
 
   #createPlayerInputCursor() {
@@ -605,10 +665,10 @@ export class BattleMenu {
     this.#userInputCursorPhaserImageGameObject.setAngle(90).setScale(2.5, 1.25);
     this.#userInputCursorPhaserImageGameObject.setAlpha(0);
 
-    this.#userInputCursorPhaserTween = this.#scene.tweens.add({
+    this.#userInputCursorPhaserTween = this.#scene.add.tween({
+      delay: 0,
       duration: 500,
       repeat: -1,
-      delay: 0,
       y: {
         from: PLAYER_INPUT_CURSOR_POS.y,
         start: PLAYER_INPUT_CURSOR_POS.y,

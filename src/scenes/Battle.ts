@@ -30,10 +30,6 @@ export class Battle extends Scene {
     this.#activePlayerAttackIndex = -1;
   }
 
-  preload() {
-    console.log(`[${Battle.name}:preload] invoked`);
-  }
-
   create() {
     console.log(`[${Battle.name}:create] invoked`);
     // created main background
@@ -49,7 +45,7 @@ export class Battle extends Scene {
         maxHp: 25,
         assetFrame: 0,
         currentHp: 25,
-        baseAttack: 25,
+        baseAttack: 5,
         currentLevel: 5,
         attackIds: [1],
       },
@@ -63,7 +59,7 @@ export class Battle extends Scene {
         maxHp: 25,
         assetFrame: 0,
         currentHp: 25,
-        baseAttack: 5,
+        baseAttack: 15,
         currentLevel: 5,
         attackIds: [2, 1],
       },
@@ -71,7 +67,6 @@ export class Battle extends Scene {
 
     // render out the main and sub info panes
     this.#battleMenu = new BattleMenu(this, this.#activePlayerMonster);
-    this.#battleMenu.showMainBattleMenu();
     this.#createBattleStateMachine();
 
     this.#cursorKeys = this.input.keyboard!.createCursorKeys();
@@ -83,7 +78,6 @@ export class Battle extends Scene {
     const wasSpaceKeyPressed = Phaser.Input.Keyboard.JustDown(
       this.#cursorKeys.space
     );
-
     // limit input based on the current battle state we are in
     // if we are not in the right battle state, return early and do not process input
     if (
@@ -102,14 +96,13 @@ export class Battle extends Scene {
     if (
       this.#battleStateMachine.currentStateName !== BATTLE_STATES.PLAYER_INPUT
     ) {
-      this.#battleMenu.handlePlayerInput(BATTLE_PLAYER_INPUT.OK);
       return;
     }
 
     if (wasSpaceKeyPressed) {
       this.#battleMenu.handlePlayerInput(BATTLE_PLAYER_INPUT.OK);
 
-      // check if the player selected an attack, and update display text
+      //check if the player selected an attack, and update display text
       if (this.#battleMenu.selectedAttack === undefined) {
         return;
       }
@@ -133,7 +126,8 @@ export class Battle extends Scene {
       return;
     }
 
-    let selectedDirection: DIRECTION = DIRECTION.NONE;
+    /** @type {import('../common/direction.js').Direction} */
+    let selectedDirection = DIRECTION.NONE;
     if (this.#cursorKeys.left.isDown) {
       selectedDirection = DIRECTION.LEFT;
     } else if (this.#cursorKeys.right.isDown) {
@@ -150,7 +144,7 @@ export class Battle extends Scene {
   }
 
   #playerAttack() {
-    this.#battleMenu.updateInfoPaneMessagesNoInputRequired(
+    this.#battleMenu.updateInfoPaneMessageNoInputRequired(
       `${this.#activePlayerMonster.name} used ${
         this.#activePlayerMonster.attacks[this.#activePlayerAttackIndex].name
       }`,
@@ -173,12 +167,10 @@ export class Battle extends Scene {
       return;
     }
 
-    this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
-      [
-        `${this.#activeEnemyMonster.name} used ${
-          this.#activeEnemyMonster.attacks[0].name
-        }`,
-      ],
+    this.#battleMenu.updateInfoPaneMessageNoInputRequired(
+      `foe ${this.#activeEnemyMonster.name} used ${
+        this.#activeEnemyMonster.attacks[0].name
+      }`,
       () => {
         this.time.delayedCall(1200, () => {
           this.#activePlayerMonster.takeDamage(
@@ -198,7 +190,7 @@ export class Battle extends Scene {
     if (this.#activeEnemyMonster.isFainted) {
       this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
         [
-          `Wild ${this.#activeEnemyMonster.name} fainted!`,
+          `Wild ${this.#activeEnemyMonster.name} fainted`,
           "You have gained some experience",
         ],
         () => {
@@ -211,7 +203,7 @@ export class Battle extends Scene {
     if (this.#activePlayerMonster.isFainted) {
       this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
         [
-          `Wild ${this.#activePlayerMonster.name} fainted!`,
+          `${this.#activePlayerMonster.name} fainted`,
           "You have no more monsters, escaping to safety...",
         ],
         () => {
@@ -220,6 +212,7 @@ export class Battle extends Scene {
       );
       return;
     }
+
     this.#battleStateMachine.setState(BATTLE_STATES.PLAYER_INPUT);
   }
 
@@ -239,7 +232,7 @@ export class Battle extends Scene {
     this.#battleStateMachine.addState({
       name: BATTLE_STATES.INTRO,
       onEnter: () => {
-        // 모든 씬과 전환이 완료될 때까지 대기
+        // wait for any scene setup and transitions to complete
         this.time.delayedCall(500, () => {
           this.#battleStateMachine.setState(BATTLE_STATES.PRE_BATTLE_INFO);
         });
@@ -267,8 +260,8 @@ export class Battle extends Scene {
     this.#battleStateMachine.addState({
       name: BATTLE_STATES.BRING_OUT_MONSTER,
       onEnter: () => {
-        // wait for player monster to appear on the screen and notify player about the wild monster
-        this.#battleMenu.updateInfoPaneMessagesNoInputRequired(
+        // wait for player monster to appear on the screen and notify the player about monster
+        this.#battleMenu.updateInfoPaneMessageNoInputRequired(
           `go ${this.#activePlayerMonster.name}!`,
           () => {
             // wait for text animation to complete and move to next state
@@ -291,39 +284,44 @@ export class Battle extends Scene {
       name: BATTLE_STATES.ENEMY_INPUT,
       onEnter: () => {
         // TODO: add feature in a future update
-        // pick a random move for the enemy monster, and in the implement some type of AI
-        this.#battleStateMachine.setState(BATTLE_STATES.PLAYER_INPUT);
+        // pick a random move for the enemy monster, and in the future implement some type of AI behavior
+        this.#battleStateMachine.setState(BATTLE_STATES.BATTLE);
       },
     });
+
     this.#battleStateMachine.addState({
       name: BATTLE_STATES.BATTLE,
       onEnter: () => {
-        // greneral battle sequence
+        // general battle flow
         // show attack used, brief pause
         // then play attack animation, brief pause
+        // then play damage animation, brief pause
         // then play health bar animation, brief pause
-        // then repeat the steps above for the enemy monster
+        // then repeat the steps above for the other monster
 
         this.#playerAttack();
       },
     });
+
     this.#battleStateMachine.addState({
       name: BATTLE_STATES.POST_ATTACK_CHECK,
       onEnter: () => {
         this.#postBattleSequenceCheck();
       },
     });
+
     this.#battleStateMachine.addState({
       name: BATTLE_STATES.FINISHED,
       onEnter: () => {
         this.#transitionToNextScene();
       },
     });
+
     this.#battleStateMachine.addState({
       name: BATTLE_STATES.FLEE_ATTEMPT,
       onEnter: () => {
         this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
-          ["You got away safely!"],
+          [`You got away safely!`],
           () => {
             this.#battleStateMachine.setState(BATTLE_STATES.FINISHED);
           }
@@ -331,7 +329,7 @@ export class Battle extends Scene {
       },
     });
 
-    // start the battle state machine
+    // start the state machine
     this.#battleStateMachine.setState("INTRO");
   }
 }
