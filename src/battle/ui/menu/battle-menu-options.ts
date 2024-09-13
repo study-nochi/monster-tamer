@@ -39,3 +39,7 @@ export enum DISTANCE_TO_MOVE_CURSOR {
   right = 186,
   down = 48,
 }
+
+export enum PLAYER_INPUT_CURSOR_POS {
+  y = 488,
+}

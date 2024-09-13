@@ -1,11 +1,10 @@
 import { Scene } from "phaser";
-import { BATTLE_ASSET_KEYS, MONSTER_ASSET_KEYS } from "../constants/asset";
+import { MONSTER_ASSET_KEYS } from "../constants/asset";
 import { SCENE_KEYS } from "../constants/scene";
 import { BattleMenu } from "../battle/ui/menu/battle-menu";
 import { BATTLE_PLAYER_INPUT } from "../battle/ui/menu/battle-menu-options";
 import { DIRECTION } from "../constants/direction";
 import { Background } from "../battle/background";
-import { HealthBar } from "../battle/ui/health-bar";
 import { EnemyBattleMonster } from "../battle/monsters/enemy-bettle-monster";
 import { PlayerBattleMonster } from "../battle/monsters/player-battle-monster";
 import { StateMachine } from "../utils/state-machine";
@@ -85,6 +84,28 @@ export class Battle extends Scene {
       this.#cursorKeys.space
     );
 
+    // limit input based on the current battle state we are in
+    // if we are not in the right battle state, return early and do not process input
+    if (
+      wasSpaceKeyPressed &&
+      (this.#battleStateMachine.currentStateName ===
+        BATTLE_STATES.PRE_BATTLE_INFO ||
+        this.#battleStateMachine.currentStateName ===
+          BATTLE_STATES.POST_ATTACK_CHECK ||
+        this.#battleStateMachine.currentStateName ===
+          BATTLE_STATES.FLEE_ATTEMPT)
+    ) {
+      this.#battleMenu.handlePlayerInput(BATTLE_PLAYER_INPUT.OK);
+      return;
+    }
+
+    if (
+      this.#battleStateMachine.currentStateName !== BATTLE_STATES.PLAYER_INPUT
+    ) {
+      this.#battleMenu.handlePlayerInput(BATTLE_PLAYER_INPUT.OK);
+      return;
+    }
+
     if (wasSpaceKeyPressed) {
       this.#battleMenu.handlePlayerInput(BATTLE_PLAYER_INPUT.OK);
 
@@ -129,14 +150,12 @@ export class Battle extends Scene {
   }
 
   #playerAttack() {
-    this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
-      [
-        `${this.#activePlayerMonster.name} used ${
-          this.#activePlayerMonster.attacks[this.#activePlayerAttackIndex].name
-        }`,
-      ],
+    this.#battleMenu.updateInfoPaneMessagesNoInputRequired(
+      `${this.#activePlayerMonster.name} used ${
+        this.#activePlayerMonster.attacks[this.#activePlayerAttackIndex].name
+      }`,
       () => {
-        this.time.delayedCall(500, () => {
+        this.time.delayedCall(1200, () => {
           this.#activeEnemyMonster.takeDamage(
             this.#activePlayerMonster.baseAttack,
             () => {
@@ -161,7 +180,7 @@ export class Battle extends Scene {
         }`,
       ],
       () => {
-        this.time.delayedCall(500, () => {
+        this.time.delayedCall(1200, () => {
           this.#activePlayerMonster.takeDamage(
             this.#activeEnemyMonster.baseAttack,
             () => {
@@ -249,11 +268,11 @@ export class Battle extends Scene {
       name: BATTLE_STATES.BRING_OUT_MONSTER,
       onEnter: () => {
         // wait for player monster to appear on the screen and notify player about the wild monster
-        this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
-          [`go ${this.#activePlayerMonster.name}!`],
+        this.#battleMenu.updateInfoPaneMessagesNoInputRequired(
+          `go ${this.#activePlayerMonster.name}!`,
           () => {
             // wait for text animation to complete and move to next state
-            this.time.delayedCall(500, () => {
+            this.time.delayedCall(1200, () => {
               this.#battleStateMachine.setState(BATTLE_STATES.PLAYER_INPUT);
             });
           }
@@ -298,7 +317,7 @@ export class Battle extends Scene {
       name: BATTLE_STATES.FINISHED,
       onEnter: () => {
         this.#transitionToNextScene();
-      }
+      },
     });
     this.#battleStateMachine.addState({
       name: BATTLE_STATES.FLEE_ATTEMPT,
@@ -309,7 +328,7 @@ export class Battle extends Scene {
             this.#battleStateMachine.setState(BATTLE_STATES.FINISHED);
           }
         );
-      }
+      },
     });
 
     // start the battle state machine
