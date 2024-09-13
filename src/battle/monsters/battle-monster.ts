@@ -1,4 +1,8 @@
-import { BATTLE_ASSET_KEYS, MONSTER_ASSET_KEYS } from "../../constants/asset";
+import {
+  BATTLE_ASSET_KEYS,
+  KENNEY_FUTURE_NARROW_FONT_NAME,
+  MONSTER_ASSET_KEYS,
+} from "../../constants/asset";
 import { Monster, Coordinate, BattleMonsterConfig, Attack } from "../../types";
 import { DataUtils } from "../../utils/data-utils";
 import { HealthBar } from "../ui/health-bar";
@@ -124,15 +128,11 @@ export class BattleMonster implements BattleMonsterConfig {
   ): void {
     this._healthBar = new HealthBar(this._scene, 34, 34);
 
-    const monsterNameGameText = this._scene.add.text(
-      30,
-      20,
-      MONSTER_ASSET_KEYS.CARNODUSK,
-      {
-        color: "#7E3D3F",
-        fontSize: "32px",
-      }
-    );
+    const monsterNameGameText = this._scene.add.text(30, 20, this.name, {
+      color: "#7E3D3F",
+      fontSize: "32px",
+      fontFamily: KENNEY_FUTURE_NARROW_FONT_NAME,
+    });
 
     const healthBarBgImage = this._scene.add
       .image(0, 0, BATTLE_ASSET_KEYS.HEALTH_BAR_BACKGROUND)
@@ -146,6 +146,7 @@ export class BattleMonster implements BattleMonsterConfig {
       {
         color: "#ED474B",
         fontSize: "28px",
+        fontFamily: KENNEY_FUTURE_NARROW_FONT_NAME,
       }
     );
 
@@ -153,6 +154,7 @@ export class BattleMonster implements BattleMonsterConfig {
       color: "#FF6505",
       fontSize: "24px",
       fontStyle: "italic",
+      fontFamily: KENNEY_FUTURE_NARROW_FONT_NAME,
     });
 
     this._phaserHealthBarGameContainer = this._scene.add

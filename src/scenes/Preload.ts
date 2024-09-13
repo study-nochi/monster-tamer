@@ -8,6 +8,7 @@ import {
   MONSTER_ASSET_KEYS,
   UI_ASSET_KEYS,
 } from "../constants/asset";
+import WebFontLoader from "webfontloader";
 
 export class Preload extends Scene {
   constructor() {
@@ -84,7 +85,14 @@ export class Preload extends Scene {
   }
 
   create() {
-    console.log(`[${Preload.name}:create] invoked`);
-    this.scene.start(SCENE_KEYS.BATTLE_SCENE);
+    WebFontLoader.load({
+      custom: {
+        families: ["Kenny-Future-Narrow"],
+      },
+      active: () => {
+        console.log("Fonts ready");
+        this.scene.start(SCENE_KEYS.BATTLE_SCENE);
+      },
+    });
   }
 }
