@@ -5,10 +5,11 @@ import {
   BATTLE_BACKGROUND_ASSET_KEYS,
   DATA_ASSET_KEYS,
   HEALTH_BAR_ASSET_KEYS,
+  KENNEY_FUTURE_NARROW_FONT_NAME,
   MONSTER_ASSET_KEYS,
   UI_ASSET_KEYS,
 } from "../constants/asset";
-import WebFontLoader from "webfontloader";
+import { WebFontFileLoader } from "../utils/web-font-file-loader";
 
 export class Preload extends Scene {
   constructor() {
@@ -82,17 +83,11 @@ export class Preload extends Scene {
 
     // load json data
     this.load.json(DATA_ASSET_KEYS.ATTACKS, `${dataAssetPath}/attacks.json`);
+
+    this.load.addFile(new WebFontFileLoader(this.load, [KENNEY_FUTURE_NARROW_FONT_NAME]));
   }
 
   create() {
-    WebFontLoader.load({
-      custom: {
-        families: ["Kenny-Future-Narrow"],
-      },
-      active: () => {
-        console.log("Fonts ready");
-        this.scene.start(SCENE_KEYS.BATTLE_SCENE);
-      },
-    });
+    this.scene.start(SCENE_KEYS.BATTLE_SCENE);
   }
 }
