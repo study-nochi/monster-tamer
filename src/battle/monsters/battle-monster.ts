@@ -12,12 +12,14 @@ export class BattleMonster implements BattleMonsterConfig {
   _maxHealth: number;
   _monsterAttack: Attack[];
   _phaserHealthBarGameContainer: Phaser.GameObjects.Container;
+  _skipBattleAnimation: boolean;
 
   constructor(
     config: {
       _scene: Phaser.Scene;
       _monsterDetails: Monster;
       scaleHealthBarBackgroundImageByY?: number;
+      skipBattleAnimation?: boolean;
     },
     position: Coordinate
   ) {
@@ -26,6 +28,7 @@ export class BattleMonster implements BattleMonsterConfig {
     this._currentHealth = this._monsterDetails.currentHp;
     this._maxHealth = this._monsterDetails.maxHp;
     this._monsterAttack = [];
+    this._skipBattleAnimation = config.skipBattleAnimation ?? false;
 
     this._phaserGameObject = this._scene.add
       .image(
@@ -89,6 +92,12 @@ export class BattleMonster implements BattleMonsterConfig {
   }
 
   playTakeDamageAnimation(callback?: () => void): void {
+    if (this._skipBattleAnimation) {
+      this._phaserGameObject.setAlpha(1);
+      callback?.();
+      return;
+    }
+
     this._scene.tweens.add({
       delay: 0,
       duration: 150,

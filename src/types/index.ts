@@ -2,6 +2,7 @@ export interface BattleMonsterConfig {
   _scene: Phaser.Scene;
   _monsterDetails: Monster;
   scaleHealthBarBackgroundImageByY?: number;
+  skipBattleAnimation?: boolean;
 }
 
 export interface Monster {

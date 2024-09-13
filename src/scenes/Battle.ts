@@ -9,6 +9,7 @@ import { EnemyBattleMonster } from "../battle/monsters/enemy-bettle-monster";
 import { PlayerBattleMonster } from "../battle/monsters/player-battle-monster";
 import { StateMachine } from "../utils/state-machine";
 import { BATTLE_STATES } from "../constants/battle";
+import { SKIP_BATTLE_ANIMATION } from "../constants/config";
 
 export class Battle extends Scene {
   #battleMenu: BattleMenu;
@@ -49,6 +50,7 @@ export class Battle extends Scene {
         currentLevel: 5,
         attackIds: [1],
       },
+      skipBattleAnimation: SKIP_BATTLE_ANIMATION,
     });
 
     this.#activePlayerMonster = new PlayerBattleMonster({
@@ -63,6 +65,7 @@ export class Battle extends Scene {
         currentLevel: 5,
         attackIds: [2, 1],
       },
+      skipBattleAnimation: SKIP_BATTLE_ANIMATION,
     });
 
     // render out the main and sub info panes
@@ -159,7 +162,8 @@ export class Battle extends Scene {
             );
           });
         });
-      }
+      },
+      SKIP_BATTLE_ANIMATION
     );
   }
 
@@ -186,7 +190,8 @@ export class Battle extends Scene {
             );
           });
         });
-      }
+      },
+      SKIP_BATTLE_ANIMATION
     );
   }
 
@@ -200,7 +205,8 @@ export class Battle extends Scene {
           ],
           () => {
             this.#battleStateMachine.setState(BATTLE_STATES.FINISHED);
-          }
+          },
+          SKIP_BATTLE_ANIMATION
         );
       });
       return;
@@ -215,7 +221,8 @@ export class Battle extends Scene {
           ],
           () => {
             this.#battleStateMachine.setState(BATTLE_STATES.FINISHED);
-          }
+          },
+          SKIP_BATTLE_ANIMATION
         );
       });
       return;
@@ -262,7 +269,8 @@ export class Battle extends Scene {
                   BATTLE_STATES.BRING_OUT_MONSTER
                 );
               });
-            }
+            },
+            SKIP_BATTLE_ANIMATION
           );
         });
       },
@@ -283,7 +291,8 @@ export class Battle extends Scene {
               this.time.delayedCall(1200, () => {
                 this.#battleStateMachine.setState(BATTLE_STATES.PLAYER_INPUT);
               });
-            }
+            },
+            SKIP_BATTLE_ANIMATION
           );
         });
       },
@@ -340,7 +349,8 @@ export class Battle extends Scene {
           [`You got away safely!`],
           () => {
             this.#battleStateMachine.setState(BATTLE_STATES.FINISHED);
-          }
+          },
+          SKIP_BATTLE_ANIMATION
         );
       },
     });

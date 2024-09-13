@@ -1,4 +1,5 @@
 import { UI_ASSET_KEYS } from "../../../constants/asset";
+import { SKIP_BATTLE_ANIMATION } from "../../../constants/config";
 import { DIRECTION } from "../../../constants/direction";
 import { exhaustiveGuard } from "../../../utils/guard";
 import { animateText } from "../../../utils/test-utils";
@@ -199,10 +200,8 @@ export class BattleMenu {
       this.#battleTextGameObjectLine1.setText(messageToDisplay);
       this.#queuedMessageAnimationPlaying = false;
       this.#waitingForPlayerInput = true;
-      if (this.#queuedInfoPanelCallback) {
-        this.#queuedInfoPanelCallback();
-        this.#queuedInfoPanelCallback = undefined;
-      }
+      this.playInputCursorAnimation();
+    
       return;
     }
 
@@ -593,7 +592,8 @@ export class BattleMenu {
         ["Your bag is empty..."],
         () => {
           this.#switchToMainBattleMenu();
-        }
+        },
+        SKIP_BATTLE_ANIMATION
       );
       return;
     }
@@ -609,7 +609,8 @@ export class BattleMenu {
         ["You have no other monsters in your party..."],
         () => {
           this.#switchToMainBattleMenu();
-        }
+        },
+        SKIP_BATTLE_ANIMATION
       );
       return;
     }
@@ -625,7 +626,8 @@ export class BattleMenu {
         ["You fail to run away..."],
         () => {
           this.#switchToMainBattleMenu();
-        }
+        },
+        SKIP_BATTLE_ANIMATION
       );
       return;
     }
