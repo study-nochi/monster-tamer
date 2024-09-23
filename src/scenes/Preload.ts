@@ -13,6 +13,8 @@ import {
 import { WebFontFileLoader } from "../utils/web-font-file-loader";
 
 export class Preload extends Scene {
+  #loaded = false;
+
   constructor() {
     super({
       key: SCENE_KEYS.PRELOAD_SCENE,
@@ -119,11 +121,20 @@ export class Preload extends Scene {
       ),
     ]).then(() => {
       console.log(`[${Preload.name}:preload] assets loaded`);
+      this.#loaded = true;
     });
   }
 
+  update(): void {
+    if (this.#loaded) {
+      console.log(
+        `[${Preload.name}:update] assets loaded, starting battle scene`
+      );
+    }
+  }
+
   create() {
-    console.log(`[${Preload.name}:create] invoked`);
     this.scene.start(SCENE_KEYS.BATTLE_SCENE);
+    console.log(`[${Preload.name}:create] invoked`);
   }
 }

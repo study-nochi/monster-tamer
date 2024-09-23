@@ -1,10 +1,13 @@
 import { Coordinate } from "../../types";
 
 export class Attack {
-  _scene: Phaser.Scene;
-  _position: Coordinate;
-  _isAnimationPlaying: boolean;
-  _attackGameObject: Phaser.GameObjects.Sprite | Phaser.GameObjects.Container | undefined;
+  protected _scene: Phaser.Scene;
+  protected _position: Coordinate;
+  protected _isAnimationPlaying: boolean;
+  protected _attackGameObject:
+    | Phaser.GameObjects.Sprite
+    | Phaser.GameObjects.Container
+    | undefined;
 
   constructor(scene: Phaser.Scene, position: Coordinate) {
     this._scene = scene;
@@ -13,7 +16,10 @@ export class Attack {
     this._attackGameObject = undefined;
   }
 
-  get gameObject(): Phaser.GameObjects.Sprite | Phaser.GameObjects.Container | undefined {
+  get gameObject():
+    | Phaser.GameObjects.Sprite
+    | Phaser.GameObjects.Container
+    | undefined {
     return this._attackGameObject;
   }
 
@@ -21,4 +27,3 @@ export class Attack {
     throw new Error("playAnimation not implemented");
   }
 }
- 

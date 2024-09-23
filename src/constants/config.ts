@@ -1,1 +1,1 @@
-export const SKIP_BATTLE_ANIMATION = true;
+export const SKIP_BATTLE_ANIMATION = false;

@@ -3,7 +3,7 @@ import { Coordinate } from "../../types";
 import { Attack } from "./attacks";
 
 export class IceShard extends Attack {
-  _attackGameObject: Phaser.GameObjects.Sprite;
+  protected _attackGameObject: Phaser.GameObjects.Sprite;
 
   constructor(scene: Phaser.Scene, position: Coordinate) {
     super(scene, position);

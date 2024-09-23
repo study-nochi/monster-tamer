@@ -1,6 +1,5 @@
 import { AUTO, Game, Scale, Types } from "phaser";
 import { Preload } from "./scenes/Preload";
-import { SCENE_KEYS } from "./constants/scene";
 import { Battle } from "./scenes/Battle";
 
 //  Find out more information about the Game Config at:
@@ -16,11 +15,7 @@ const config: Types.Core.GameConfig = {
     autoCenter: Scale.CENTER_BOTH,
   },
   backgroundColor: "#000000",
+  scene: [Preload, Battle],
 };
 
-const game = new Game(config);
-
-game.scene.add(SCENE_KEYS.PRELOAD_SCENE, Preload, true);
-game.scene.add(SCENE_KEYS.BATTLE_SCENE, Battle);
-
-export default game;
+export default new Game(config);
