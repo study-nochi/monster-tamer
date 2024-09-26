@@ -11,6 +11,7 @@ import { StateMachine } from "../utils/state-machine";
 import { BATTLE_STATES } from "../constants/battle";
 import { SKIP_BATTLE_ANIMATION } from "../constants/config";
 import { ATTACK_TARGET, AttackManager } from "../battle/attacks/attack-manager";
+import { createSceneTransition } from "../utils/scene-transition";
 
 export class Battle extends Scene {
   #battleMenu: BattleMenu;
@@ -264,8 +265,11 @@ export class Battle extends Scene {
       name: BATTLE_STATES.INTRO,
       onEnter: () => {
         // wait for any scene setup and transitions to complete
-        this.time.delayedCall(500, () => {
-          this.#battleStateMachine.setState(BATTLE_STATES.PRE_BATTLE_INFO);
+        createSceneTransition(this, {
+          skipSceneTransition: SKIP_BATTLE_ANIMATION,
+          callback: () => {
+            this.#battleStateMachine.setState(BATTLE_STATES.PRE_BATTLE_INFO);
+          },
         });
       },
     });
